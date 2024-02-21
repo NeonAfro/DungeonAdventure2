@@ -11,12 +11,13 @@ import java.awt.image.BufferedImage;
 public class GamePanel extends JPanel {
 
     private static final long serialVersionUID = 1L;
+    
 	private BufferedImage buttonImage;
     private Rectangle actionButtonBounds;
-
+    
     public GamePanel() {
         setPreferredSize(new Dimension(400, 400)); // Set preferred size for the panel
-
+        
         try {
             buttonImage = ImageIO.read(getClass().getResourceAsStream("/res/up.png")); // Load button image
         } catch (IOException e) {
