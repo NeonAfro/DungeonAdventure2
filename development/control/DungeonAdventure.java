@@ -2,7 +2,7 @@ package control;
 
 import javax.swing.SwingUtilities;
 
-import mod.Dungeon;
+import model_function.Dungeon;
 import viewTest.ClickableMap;
 
 public class DungeonAdventure {

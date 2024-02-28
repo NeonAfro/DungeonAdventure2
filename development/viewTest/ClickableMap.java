@@ -3,7 +3,7 @@ package viewTest;
 import javax.swing.*;
 
 import control.DungeonAdventure;
-import mod.Dungeon;
+import model_function.Dungeon;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -11,7 +11,7 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
-public class ClickableMap extends JFrame {
+public class ClickableMap extends JPanel {
 	
 	private static final long serialVersionUID = -8959221219558654747L;
 	private TilePanel[][] tiles;
@@ -21,9 +21,6 @@ public class ClickableMap extends JFrame {
     public ClickableMap(DungeonAdventure dungeonAdventure, Dungeon dungeon) {
     	this.dungeon = dungeon;
     	this.dungeonAdventure = dungeonAdventure;
-    	
-        setTitle("Clickable Map");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new GridLayout(4, 3));
         tiles = new TilePanel[3][3];
 //        Color[] color = {Color.PINK, Color.green, Color.red, Color.CYAN, Color.GRAY,
@@ -53,11 +50,6 @@ public class ClickableMap extends JFrame {
 				
 			}
         });
-        
-        pack();
-        setLocationRelativeTo(null);
-        setVisible(true);
-        requestFocus();
     }
 
     public void setRoom(boolean doors[], String monsters[]) {
@@ -85,12 +77,12 @@ public class ClickableMap extends JFrame {
     			this.add(tiles[i][j]);
     		}
     	}
-    	pack();
     	repaint();
     }
 
     private class TilePanel extends JPanel {
         private static final long serialVersionUID = 1536048036353336639L;
+        private boolean monster;
 		private boolean door;
 		private int[] location;
 
@@ -114,8 +106,6 @@ public class ClickableMap extends JFrame {
         	door = actionable;
         }
     }
-    private class MapPanel extends JPanel{
-    	
-    }
+    
 }
 
