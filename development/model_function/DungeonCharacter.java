@@ -35,11 +35,17 @@ public class DungeonCharacter { // mock character, will get official from SQLite
 	public LinkedList<Attacks> getAttacks() {
 		return attacks;
 	}
+	public void addAttack(Attacks attack) {
+		attacks.add(attack);
+	}
 	public String getName() {
 		return name;
 	}
 	public int getHealth() {
 		return healthPoints;
+	}
+	public int getMaxHealth() {
+		return maxHealthPoints;
 	}
 	public void takeDamage(int damage) {
 		healthPoints -= damage;

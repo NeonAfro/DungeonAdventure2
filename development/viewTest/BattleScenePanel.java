@@ -6,6 +6,7 @@ import java.awt.GridLayout;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
@@ -15,6 +16,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 
 import model_attacks.Attacks;
+import model_attacks.Hit;
 import model_function.DungeonCharacter;
 
 public class BattleScenePanel extends JPanel{
@@ -46,7 +48,7 @@ public class BattleScenePanel extends JPanel{
 		setUpUI();
 		startBattle();
 	}
-	private void setUpUI() {
+	private void setUpUI() { // completely from chatGPT
 		setSize(400, 300);
 		setLayout(new BorderLayout());
 		
@@ -57,7 +59,7 @@ public class BattleScenePanel extends JPanel{
 		JPanel healthBarPanel = new JPanel();
 		healthBarPanel.setLayout(new GridLayout(2, 1));
 		
-		playerHealthBar = new JProgressBar(0, player.getHealth());
+		playerHealthBar = new JProgressBar(0, player.getMaxHealth());
         playerHealthBar.setValue(player.getHealth());
         playerHealthBar.setStringPainted(true);
         playerHealthBar.setString(player.getName() + " Health: " + player.getHealth());
@@ -100,39 +102,82 @@ public class BattleScenePanel extends JPanel{
 	}
 	private void victory(DungeonCharacter winner) {
 		stopBattle();
-		updateBattleLog("\n----The " + winner.getName() + " has won!----");
 		if(winner.equals(player)) {
+			updateBattleLog("\n----The " + player.getName() + " has won!----");
 			battleAnalysis();
 			rewardScreen();
 		}
 		else {
+			updateBattleLog("\n----The " + player.getName() + " has lost!----");
 			loseScreen();
 		}
 	}
 	private void rewardScreen() {
-		//remove all components, then add buttons to upgrade an attack
-//		this.removeAll();
-//		this.repaint();
-		
-		//adding three buttons for upgrade choices
-		int size = player.getAttacks().size();
-		int selection = (int)(Math.random() * (0 - size + 1));
-		
-		
-//		gameFrame.getOutcome();
+		SwingUtilities.invokeLater(() -> {
+			//remove all components, then add buttons to upgrade an attack
+			this.removeAll();
+			this.revalidate();
+			
+			this.setLayout(new GridLayout(1, 3));
+			//adding three buttons for upgrade choices
+			int size = player.getAttacks().size();
+			for(int i = 0; i < 3; i++) {
+				JButton choice = new JButton();
+				// what if there is a chance to get a new Attack?
+				// lets make the chance be 1/4 for each button or 3/4
+				if((int)(Math.random() * 5) <= 3) {
+					int random = (int)(Math.random() * (size));
+					Attacks selection = player.getAttacks().get(random);
+					String[] upgrade = selection.getRandomStat();
+					// String[1].charAt(0) for selection of skill
+					
+					choice.setText("<html>Increase " + selection.getName() 
+						+ " <br> " + upgrade[0]); // text for JButton is formatted with html
+					choice.addActionListener(e -> {
+						selection.upgrade(upgrade[1].charAt(0));
+						end();
+					});
+				} else {
+					// when getting a new attack, it'll be random
+					// this is mock attack creation.
+					Attacks newAttack = new Hit("New Attack", 500, 1.0, new int[] {5, 8}, false);
+					choice.setText("Learn " + newAttack.getName());
+					choice.addActionListener(e -> {
+						player.addAttack(newAttack);
+						end();
+					});
+				}
+				
+				
+				this.add(choice);
+			}
+			this.repaint();
+			
+			// access the attack and modify it
+			
+			// gameFrame.getOutcome(); // used in official game
+		});
 	}
 	private void loseScreen() {
 		
 	}
-
-	private void updateBattleLog(String text) {
+	private void end() {
+		this.removeAll();
+		this.revalidate();
+		this.repaint();
+		for(Attacks attack : player.getAttacks()) {
+			System.out.println(attack.toString());
+		}
+		gameFrame.switchToRoom();
+	}
+	private void updateBattleLog(String text) { //completely from chatGPT
         SwingUtilities.invokeLater(() -> {
             battleLog.append(text +"\n");
             battleLog.setCaretPosition(battleLog.getDocument().getLength());
         });
     }
 
-	private void updateHealthBars() {
+	private void updateHealthBars() { // completely from chatGPT
         SwingUtilities.invokeLater(() -> {
             playerHealthBar.setValue(player.getHealth());
             playerHealthBar.setString(player.getName() + " Health: " + player.getHealth());

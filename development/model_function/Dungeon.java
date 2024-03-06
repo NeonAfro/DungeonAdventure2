@@ -1,8 +1,10 @@
 package model_function;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Queue;
@@ -26,6 +28,11 @@ public class Dungeon{
     	// default size + (default size + 1) created to make the inbetweens
     	maze = new char[DEFAULT_SIZE * 2 + 1][DEFAULT_SIZE * 2 + 1];
     	traversedRooms = new boolean[DEFAULT_SIZE * 2 + 1][DEFAULT_SIZE * 2 + 1];
+    	for(int i = 0; i < traversedRooms.length; i++) {
+    		for(int j = 0; j < traversedRooms.length; j++) {
+    			traversedRooms[i][j] = false;
+    		}
+    	}
     	// odd # indexes implies rooms
     	// even # indexes implies room accessibility
     	createMaze();
@@ -39,8 +46,8 @@ public class Dungeon{
     private void setEntrance() {
     	Room entrance = null;
     	for(int[] loc : newRooms) {
-    		if(maze[loc[0]][loc[1]] == 'i') {
-    			entrance = rooms[loc[0]][loc[1]];
+    		if(maze[loc[0]][loc[1]] == 'i') {// magic number, need better naming
+    			entrance = rooms[loc[0]][loc[1]]; // enumerators could be used here.
     			traversedRooms[loc[0]][loc[1]] = true;
     			break;
     		}
@@ -48,7 +55,12 @@ public class Dungeon{
     	currentRoom = entrance;
     }
     
-    public boolean[] getDoorsForRoom() {
+    public boolean[] getDoorsForRoom() { 
+    	// also check off traversedRoom for currentRoom now
+    	traversedRooms[currentRoom.location[0]][currentRoom.location[1]] = true;
+    	for(int[] dir : directions(1)) {
+    		traversedRooms[currentRoom.location[0]+dir[0]][currentRoom.location[1]+dir[1]] = true;
+    	}
     	boolean[] doors = new boolean[4]; // order: down, up, right, left
     	if(currentRoom.down != null) doors[0] = true;
     	if(currentRoom.up != null) doors[1] = true;
@@ -56,15 +68,78 @@ public class Dungeon{
     	if(currentRoom.left != null) doors[3] = true;
     	return doors;
     }
-    
+    public boolean hasMonster(int[] directions) {
+    	boolean monsterCleared;
+    	if(directions[0] == 0) {
+			if(directions[1] == 1) monsterCleared = currentRoom.right.monsterCleared;
+			else monsterCleared = currentRoom.left.monsterCleared;
+		} else {
+			if(directions[0] == 1) monsterCleared = currentRoom.down.monsterCleared;
+			else monsterCleared = currentRoom.up.monsterCleared;
+		}
+    	return !monsterCleared;
+    }
     public void move(int[] directions) {
+    	currentRoom.monsterCleared = true;
     	if(directions[0] == 0) {
 			currentRoom =  directions[1] == 1 ? currentRoom.right : currentRoom.left;
 		} else {
 			currentRoom =  directions[0] == 1 ? currentRoom.down : currentRoom.up;
 		}
-    	traversedRooms[currentRoom.location[0]][currentRoom.location[1]] = true;
     }
+//    public char[][] getMaze(){ 
+//    	// construct a new maze that only shows traversed rooms and doors
+//    	char[][] visibleMaze = new char[maze.length][maze[0].length];
+//    	for(int i = 0; i < maze.length; i++) {
+//    		for(int j = 0; j < maze[0].length; j++) {
+//    			visibleMaze[i][j] = '@';
+//    		}
+//    	}
+//    	for(int i = 0; i < maze.length; i++) {
+//    		for(int j = 0; j < maze[0].length; j++) {
+//    			if(traversedRooms[i][j]) {
+//    				
+//    				visibleMaze[i][j] = maze[i][j];
+//    				
+//    				for(int[] dir : directions(1)) {
+//    					int newI = i + dir[0];
+//    					int newJ = j + dir[1];
+//    					if(isValidCoordinates(newI, newJ)) visibleMaze[newI][newJ] = maze[newI][newJ];
+//    				}
+//    			}
+//    		}
+//    	}
+//    	System.out.println(toString(visibleMaze));
+//    	return visibleMaze;
+//    } // to test getMaze()
+    public char[][] getMaze(){
+    	return maze.clone();
+    }
+    public boolean[][] getVisibleMaze(){
+    	return traversedRooms.clone();
+    }
+    public int[] getMazeSize() {
+    	return new int[] {maze.length, maze[0].length};
+    }
+    public String toString(char[][] input) {
+        // Build a string representation of the dungeon maze
+    	
+        StringBuilder sb = new StringBuilder();
+        for(int i = 0; i < input.length; i++) {
+        	for(int j = 0; j < input[0].length-1; j++) {
+        		sb.append(input[i][j]);
+        	}
+        	sb.append(input[i][input[0].length-1]);
+        	sb.append("\n");
+        }
+        return sb.toString();
+    }
+//    // used to check if monster still in room.
+//    public boolean isTraversed(int[] dir) {
+//    	
+//    	return traversedRooms[currentRoom.location[0] + dir[0]*2]
+//    			[currentRoom.location[1] + dir[1]*2];
+//    }
     public void travToString() {
     	StringBuilder sb = new StringBuilder();
         for(int i = 0; i < traversedRooms.length; i++) {
@@ -81,7 +156,7 @@ public class Dungeon{
     	generateBaseMaze();
     	generateRandomDoors();
     	int size = checkMaxSize();
-    	if(size < lowerLimitSize || size > upperLimitSize) {
+    	if(size < lowerLimitSize || size > upperLimitSize) { // TODO: change to iterative [refactor]
     		createMaze();
     	} else {
 //    		System.out.println(size); // used to check size. can remove
@@ -199,7 +274,7 @@ public class Dungeon{
         return maxSize;
     }
     // helper method to remove redundant retrieval of directions
-    public static int[][] directions(int length) {
+    public static int[][] directions(int length) { // TODO: enumerator
     	int[][] ret = {{length, 0}, {-length, 0}, {0, length}, {0, -length}};
     	return ret;
     }
@@ -268,8 +343,8 @@ public class Dungeon{
 //        return sb.toString();
 //    }
     // helper method to see if coordinates are within bounds
-    private boolean isValidCoordinates(int x, int y) {
-    	return (x < maze.length && x >= 0 && y >= 0 && y < maze[0].length);
+    private boolean isValidCoordinates(int y, int x) {
+    	return (y < maze.length && y >= 0 && x >= 0 && x < maze[0].length);
     }
     // find 6 dead ends, or regenerate maze.
     private void generateEntranceAndExitAndPillars() { // will learn dfs algorithm later
@@ -358,16 +433,16 @@ public class Dungeon{
         return sb.toString();
     }
     
+    
     private class Room{ // rooms are interconnected through the predefined maze
     	private Room left, right, up, down;
-    	private int[][] room; // the grid of the room. Is populated with items/monsters
     	private final int[] location; // location of room [y, x]
     	private final char roomType;
+    	private boolean monsterCleared = false;
     	
     	private Room(int[] location, char roomType) {
     		this.location = location;
     		this.roomType = roomType;
-			room = new int[3][3]; // [y][x]
     	}
     	private void connect(int[] directions, Room connection) {
     		if(directions[0] == 0) {
